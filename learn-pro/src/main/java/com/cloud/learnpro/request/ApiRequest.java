@@ -6,6 +6,8 @@ public class ApiRequest {
 
     private String message;
 
+    private String email;
+
     public String getType() {
         return type;
     }
@@ -20,5 +22,13 @@ public class ApiRequest {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }
