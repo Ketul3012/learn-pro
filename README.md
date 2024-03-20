@@ -2,8 +2,8 @@
 
 ## Compute
 
-1. AWS EC2 - deploy frontend application
-2. AWS Elastic Beanstalk - deploy backend application
+1. AWS EC2 or EBS - deploy frontend application
+2. AWS Lambda - deploy backend application
 
 ## Storage
 
@@ -11,9 +11,9 @@
 
 ## Network
 
-1. VPC - hide dynamo db behind private network, EBS able to talk to database
+1. AWS API Gateway – Secure and route API requests to lambdas
 
 ## General
 
 1. AWS Secrets manager - used to store database credentials, API key for backend
-2. AWS SNS - used to send email
+2. AWS SES - used to send email
