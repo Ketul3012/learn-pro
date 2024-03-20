@@ -3,6 +3,9 @@ package com.cloud.learnpro.service;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
+import com.amazonaws.services.simpleemail.model.*;
 import com.cloud.learnpro.request.ApiRequest;
 import com.cloud.learnpro.response.ApiResponse;
 import com.cloud.learnpro.response.RoadMap;
@@ -78,7 +81,7 @@ public class ApiService {
         return roadmapItems;
     }
 
-    public List<RoadMap.RoadMapItem> getChatGPTResponse(String userPrompt, Secrets secrets) {
+    public List<RoadMap.RoadMapItem> getChatGPTResponse(String userPrompt, String email, Secrets secrets) {
         String url = "https://api.openai.com/v1/chat/completions";
 
         try {
@@ -107,13 +110,24 @@ public class ApiService {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(response.toString());
             String chatResponse = jsonNode.get("choices").get(0).get("message").get("content").asText();
-
-            // Return the extracted response
+            sendEmailResponse(chatResponse, email, userPrompt, secrets);
             return parseRoadmap(chatResponse);
         } catch (IOException e) {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    private void sendEmailResponse(String chatResponse, String email, String prompt, Secrets secrets) {
+        AmazonSimpleEmailService amazonSimpleEmailService = AmazonSimpleEmailServiceClientBuilder.standard().withRegion(secrets.getServicesRegion()).build();
+        SendEmailRequest sendEmailRequest = new SendEmailRequest();
+        sendEmailRequest.setDestination(new Destination().withToAddresses(email));
+        sendEmailRequest.setSource(secrets.getEmailFrom());
+        Message message = new Message();
+        message.setSubject(new Content().withCharset("UTF-8").withData("Your roadmap for " + prompt));
+        message.setBody(new Body().withText(new Content().withCharset("UTF-8").withData(chatResponse)));
+        sendEmailRequest.setMessage(message);
+        amazonSimpleEmailService.sendEmail(sendEmailRequest);
     }
 
     public ApiResponse manageApi(ApiRequest apiRequest) throws JsonProcessingException {
@@ -127,7 +141,7 @@ public class ApiService {
             apiResponse.setRoadMaps(getUserItems(apiRequest.getEmail(), dynamoDB, secrets));
             apiResponse.setMessage("Fetched data successfully");
         } else if (apiRequest.getType().equals("post")) {
-            List<RoadMap.RoadMapItem> roadMapItems = getChatGPTResponse(apiRequest.getMessage(), secrets);
+            List<RoadMap.RoadMapItem> roadMapItems = getChatGPTResponse(apiRequest.getMessage(), apiRequest.getEmail(), secrets);
             createRoadMap(apiRequest.getEmail(), roadMapItems, dynamoDB, secrets);
             apiResponse.setMessage("Successfully initiated roadmap creation");
         } else {
