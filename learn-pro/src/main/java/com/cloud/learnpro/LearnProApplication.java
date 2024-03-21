@@ -8,7 +8,7 @@ public class LearnProApplication {
 
     public static void main(String[] args) {
         ApiRequest apiRequest = new ApiRequest();
-        apiRequest.setType("post");
+        apiRequest.setType("get");
         apiRequest.setEmail("ketulpatel0502@gmail.com");
         apiRequest.setMessage("Want to learn dancing");
         System.out.println(streamLambdaHandler.handleRequest(apiRequest, null).getMessage());

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -134,7 +135,6 @@ public class ApiService {
 
         ApiResponse apiResponse = new ApiResponse();
         Secrets secrets = secretsManager.getSecret();
-
         DynamoDB dynamoDB = getDynamoDB();
 
         if (apiRequest.getType().equals("get")) {
@@ -198,7 +198,7 @@ public class ApiService {
 
             List<Map<String, Object>> rawRoadMapItems = item.getList("roadMapItems");
             for (Map<String, Object> rawItem : rawRoadMapItems) {
-                Integer dayNumber = (Integer) rawItem.get("day");
+                Integer dayNumber = ((BigDecimal) rawItem.get("day")).intValue();
                 String title = (String) rawItem.get("title");
                 List<String> tasks = (List<String>) rawItem.getOrDefault("tasks", new ArrayList<>());
                 List<String> resources = (List<String>) rawItem.getOrDefault("resources", new ArrayList<>());
