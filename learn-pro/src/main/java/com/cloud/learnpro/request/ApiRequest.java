@@ -8,6 +8,8 @@ public class ApiRequest {
 
     private String email;
 
+    private Integer id;
+
     public String getType() {
         return type;
     }
@@ -30,5 +32,13 @@ public class ApiRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 }

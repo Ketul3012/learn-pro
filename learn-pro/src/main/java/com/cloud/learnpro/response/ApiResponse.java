@@ -8,6 +8,8 @@ public class ApiResponse {
 
     private List<RoadMap> roadMaps;
 
+    private RoadMap roadMap;
+
     public String getMessage() {
         return message;
     }
@@ -22,5 +24,13 @@ public class ApiResponse {
 
     public void setRoadMaps(List<RoadMap> roadMaps) {
         this.roadMaps = roadMaps;
+    }
+
+    public RoadMap getRoadMap() {
+        return roadMap;
+    }
+
+    public void setRoadMap(RoadMap roadMap) {
+        this.roadMap = roadMap;
     }
 }

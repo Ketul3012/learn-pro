@@ -7,6 +7,7 @@ export interface RoadMap {
   id: number;
   email: string;
   createdOn: number;
+  prompt: string;
   roadMapItems: RoadMapItem[];
 }
 

@@ -57,15 +57,15 @@ export const Result = () => {
       <div className='flex flex-col mt-3 px-6 w-full'>
         <h1 className='text-xl font-semibold'>Your existing learning paths</h1>
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 my-3'>
-          {roadMapResponse?.roadMaps?.map((_, index) => (
+          {roadMapResponse?.roadMaps?.map((item, index) => (
             <div
               className='w-full aspect-square flex flex-row items-center justify-center bg-red-100 cursor-pointer hover:scale-[1.05] transition-transform rounded-lg shadow-lg'
               key={index}
               onClick={() => {
-                navigate("/path/" + index);
+                navigate("/path/" + item.id);
               }}
             >
-              <h6>Path name {index}</h6>
+              <h6>Path name: {item.prompt}</h6>
             </div>
           ))}
         </div>

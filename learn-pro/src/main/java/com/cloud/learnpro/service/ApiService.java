@@ -140,6 +140,9 @@ public class ApiService {
         if (apiRequest.getType().equals("get")) {
             apiResponse.setRoadMaps(getUserItems(apiRequest.getEmail(), dynamoDB, secrets));
             apiResponse.setMessage("Fetched data successfully");
+        } else if (apiRequest.getType().equals("getById")) {
+            apiResponse.setRoadMap(getItem(apiRequest.getId(), dynamoDB, secrets));
+            apiResponse.setMessage("Fetched data successfully");
         } else if (apiRequest.getType().equals("post")) {
             List<RoadMap.RoadMapItem> roadMapItems = getChatGPTResponse(apiRequest.getMessage(), apiRequest.getEmail(), secrets);
             createRoadMap(apiRequest.getEmail(), apiRequest.getMessage(), roadMapItems, dynamoDB, secrets);
@@ -222,6 +225,38 @@ public class ApiService {
 
         });
         return userItems;
+    }
+
+    private RoadMap getItem(Integer id, DynamoDB dynamoDB, Secrets secrets) {
+        Table table = dynamoDB.getTable(secrets.getTableName());
+        Item item = table.getItem("id", id);
+
+        String itemEmail = item.getString("email");
+        String prompt = item.getString("prompt");
+        Date createdOn = new Date(item.getLong("createdOn"));
+        List<RoadMap.RoadMapItem> roadMapItems = new ArrayList<>();
+
+        List<Map<String, Object>> rawRoadMapItems = item.getList("roadMapItems");
+        for (Map<String, Object> rawItem : rawRoadMapItems) {
+            Integer dayNumber = ((BigDecimal) rawItem.get("day")).intValue();
+            String title = (String) rawItem.get("title");
+            List<String> tasks = (List<String>) rawItem.getOrDefault("tasks", new ArrayList<>());
+            List<String> resources = (List<String>) rawItem.getOrDefault("resources", new ArrayList<>());
+            RoadMap.RoadMapItem roadMapItem = new RoadMap.RoadMapItem();
+            roadMapItem.setDayNumber(dayNumber);
+            roadMapItem.setTitle(title);
+            roadMapItem.setTasks(tasks);
+            roadMapItem.setResources(resources);
+            roadMapItems.add(roadMapItem);
+        }
+
+        RoadMap roadMap = new RoadMap();
+        roadMap.setId(id);
+        roadMap.setEmail(itemEmail);
+        roadMap.setPrompt(prompt);
+        roadMap.setCreatedOn(createdOn);
+        roadMap.setRoadMapItems(roadMapItems);
+        return roadMap;
     }
 
 
