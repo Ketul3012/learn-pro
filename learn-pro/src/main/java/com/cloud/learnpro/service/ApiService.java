@@ -142,7 +142,7 @@ public class ApiService {
             apiResponse.setMessage("Fetched data successfully");
         } else if (apiRequest.getType().equals("post")) {
             List<RoadMap.RoadMapItem> roadMapItems = getChatGPTResponse(apiRequest.getMessage(), apiRequest.getEmail(), secrets);
-            createRoadMap(apiRequest.getEmail(), roadMapItems, dynamoDB, secrets);
+            createRoadMap(apiRequest.getEmail(), apiRequest.getMessage(), roadMapItems, dynamoDB, secrets);
             apiResponse.setMessage("Successfully initiated roadmap creation");
         } else {
             apiResponse.setMessage("Invalid type of request");
@@ -151,7 +151,7 @@ public class ApiService {
         return apiResponse;
     }
 
-    private void createRoadMap(String email, List<RoadMap.RoadMapItem> roadMaps, DynamoDB dynamoDB, Secrets secrets) {
+    private void createRoadMap(String email, String prompt, List<RoadMap.RoadMapItem> roadMaps, DynamoDB dynamoDB, Secrets secrets) {
 
         Table table = dynamoDB.getTable(secrets.getTableName());
 
@@ -170,6 +170,7 @@ public class ApiService {
         Item item = new Item()
                 .withPrimaryKey("id", random.nextInt())
                 .withString("email", email)
+                .withString("prompt", prompt)
                 .withLong("createdOn", System.currentTimeMillis())
                 .withList("roadMapItems", roadMapItems);
 
@@ -193,6 +194,7 @@ public class ApiService {
         result.iterator().forEachRemaining(item -> {
             Integer id = item.getInt("id");
             String itemEmail = item.getString("email");
+            String prompt = item.getString("prompt");
             Date createdOn = new Date(item.getLong("createdOn"));
             List<RoadMap.RoadMapItem> roadMapItems = new ArrayList<>();
 
@@ -213,6 +215,7 @@ public class ApiService {
             RoadMap roadMap = new RoadMap();
             roadMap.setId(id);
             roadMap.setEmail(itemEmail);
+            roadMap.setPrompt(prompt);
             roadMap.setCreatedOn(createdOn);
             roadMap.setRoadMapItems(roadMapItems);
             userItems.add(roadMap);

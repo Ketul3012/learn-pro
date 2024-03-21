@@ -7,10 +7,10 @@ public class RoadMap {
 
     private Integer id;
     private String email;
-
     private Date createdOn;
-
     private List<RoadMapItem> roadMapItems;
+
+    private String prompt;
 
     public Integer getId() {
         return id;
@@ -42,6 +42,14 @@ public class RoadMap {
 
     public void setRoadMapItems(List<RoadMapItem> roadMapItems) {
         this.roadMapItems = roadMapItems;
+    }
+
+    public String getPrompt() {
+        return prompt;
+    }
+
+    public void setPrompt(String prompt) {
+        this.prompt = prompt;
     }
 
     public static class RoadMapItem {

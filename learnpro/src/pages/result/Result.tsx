@@ -1,10 +1,31 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { postRequest } from "../../utils/network-manager";
+import { RoadMapResponse } from "../../model/RoadMapResponse";
 
 export const Result = () => {
   const [learningPath, setLearningPath] = useState("");
   const { state } = useLocation();
   const navigate = useNavigate();
+
+  const [roadMapResponse, setRoadMapResponse] = useState<
+    RoadMapResponse | undefined
+  >(undefined);
+  const _fetchResults = useCallback(async () => {
+    if (state?.email) {
+      const roadMaps = await postRequest<RoadMapResponse>("", {
+        type: "get",
+        email: state.email,
+        message: "",
+      });
+
+      setRoadMapResponse(roadMaps.data);
+    }
+  }, [state.email]);
+
+  useEffect(() => {
+    _fetchResults();
+  }, [_fetchResults, state]);
 
   return (
     <div className='h-full flex flex-col items-start'>
@@ -36,7 +57,7 @@ export const Result = () => {
       <div className='flex flex-col mt-3 px-6 w-full'>
         <h1 className='text-xl font-semibold'>Your existing learning paths</h1>
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-10 my-3'>
-          {new Array(20).fill(0).map((_, index) => (
+          {roadMapResponse?.roadMaps?.map((_, index) => (
             <div
               className='w-full aspect-square flex flex-row items-center justify-center bg-red-100 cursor-pointer hover:scale-[1.05] transition-transform rounded-lg shadow-lg'
               key={index}
