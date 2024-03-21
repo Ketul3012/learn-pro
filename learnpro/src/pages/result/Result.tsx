@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { postRequest } from "../../utils/network-manager";
 import { RoadMapResponse } from "../../model/RoadMapResponse";
+import { toast } from "react-toastify";
 
 export const Result = () => {
   const [learningPath, setLearningPath] = useState("");
@@ -11,21 +12,52 @@ export const Result = () => {
   const [roadMapResponse, setRoadMapResponse] = useState<
     RoadMapResponse | undefined
   >(undefined);
+
   const _fetchResults = useCallback(async () => {
     if (state?.email) {
-      const roadMaps = await postRequest<RoadMapResponse>("", {
-        type: "get",
-        email: state.email,
-        message: "",
-      });
-
-      setRoadMapResponse(roadMaps.data);
+      toast.promise(
+        postRequest<RoadMapResponse>("", {
+          type: "get",
+          email: state.email,
+          message: "",
+        }),
+        {
+          pending: "Fetching Your learning paths",
+          error: "Not able to fetch your learning paths",
+          success: {
+            render({ data }) {
+              setRoadMapResponse(data.data);
+              return data.data.message;
+            },
+          },
+        }
+      );
     }
   }, [state.email]);
 
   useEffect(() => {
     _fetchResults();
   }, [_fetchResults, state]);
+
+  const _generateRoadMap = async () => {
+    toast.promise(
+      postRequest<{ message: string }>("", {
+        type: "post",
+        email: state.email,
+        message: learningPath,
+      }),
+      {
+        pending: "Generating a roadmap for you",
+        error: "Error generating roadmap",
+        success: {
+          render({ data }) {
+            _fetchResults();
+            return data.data.message;
+          },
+        },
+      }
+    );
+  };
 
   return (
     <div className='h-full flex flex-col items-start'>
@@ -49,7 +81,9 @@ export const Result = () => {
         />
         <button
           className='p-4 px-20 rounded-full self-center border-[2px] bg-blue-400 hover:bg-blue-500 hover:scale-[1.05] transition-transform shadow-lg text-white my-3'
-          onClick={() => {}}
+          onClick={async () => {
+            await _generateRoadMap();
+          }}
         >
           Generate a Path
         </button>
@@ -65,7 +99,7 @@ export const Result = () => {
                 navigate("/path/" + item.id);
               }}
             >
-              <h6>Path name: {item.prompt}</h6>
+              <h6>Path: {item.prompt || "No Name"}</h6>
             </div>
           ))}
         </div>
