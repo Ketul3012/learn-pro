@@ -7,4 +7,4 @@ AWS EC2 setup
 5. open ec2 instance using WinSCP
 6. transfer dist files to VM
 7. npm install -g serve
-8. serve -l 3000 -s app-name
+8. nohup serve -l 3000 -s app-name

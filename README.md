@@ -2,16 +2,16 @@
 
 ## Compute
 
-1. AWS EC2 or EBS - deploy frontend application
-2. AWS Lambda - deploy backend application
+1. AWS EC2 - deploy frontend application
+2. AWS Lambda - deploy backend api
 
 ## Storage
 
-1. Dynamo DB - for storage
+1. Dynamo DB - for storing user data
 
 ## Network
 
-1. AWS API Gateway – Secure and route API requests to lambdas
+1. AWS API Gateway – Route API requests to lambdas
 
 ## General
 
