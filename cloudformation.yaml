@@ -1,0 +1,217 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  EC2InstancePublicAccess:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "This security group opens ssh and http 3000 port on ec2 instance"
+      GroupName: EC2InstancePublicAccess
+      VpcId: vpc-0c0e29ded844dd893
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          ToPort: 22
+          FromPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          ToPort: 3000
+          FromPort: 3000
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: '-1' 
+          CidrIp: 0.0.0.0/0      
+
+  TermAssignmentEC2Frontend:
+    Type: AWS::EC2::Instance
+    DependsOn: [EC2InstancePublicAccess]
+    Properties:
+      InstanceType: t2.micro
+      KeyName: ec2Key
+      ImageId: ami-0c101f26f147fa7fd
+      SecurityGroups:
+        - EC2InstancePublicAccess
+
+  TermAssignmentSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: term-assignment-1
+      SecretString: '{"chatGptApiKey": "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" , "tableName" : "cloud-term-assignment", "emailFrom" : "ketulpatel3012@gmail.com", "servicesRegion" : "us-east-1"}'
+
+  TermAssignmentSESSenderEmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: ketulpatel3012@gmail.com
+      MailFromAttributes:
+        MailFromDomain: www.gmail.com
+  
+  TermAssignmentSESReceiverEmailIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: ketulpatel0502@gmail.com
+
+  TermAssignmentDynamoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      TableName: cloud-term-assignment
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: N 
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+      - PolicyName: DynamoDBAccessPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:*
+              Resource: "*"
+      - PolicyName: SecretsManagerAccessPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - secretsmanager:*
+              Resource: "*"
+      - PolicyName: LambdaExecutionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: arn:aws:logs:*:*:*        
+       
+  TermAssignmentLambda:
+    Type: AWS::Lambda::Function
+    DependsOn: [LambdaRole]
+    Properties:
+      Code:
+        S3Bucket: term-assignment-code
+        S3Key: learn-pro-0.0.1-SNAPSHOT.jar
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 120
+      MemorySize: 512
+      Runtime: java21
+      Handler: com.cloud.learnpro.StreamLambdaHandler::handleRequest
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole  
+      Policies:
+        - PolicyName: LambdaInvokePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt TermAssignmentLambda.Arn    
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    DependsOn: [TermAssignmentLambda,LambdaExecutionRole]
+    Properties:
+      Name: api-gateway
+
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    DependsOn: ApiGateway
+    Properties:
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: "api"
+      RestApiId: !Ref ApiGateway
+
+  OptionsMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn: ApiResource
+    Properties:
+      AuthorizationType: NONE
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ApiResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationHttpMethod: OPTIONS
+        IntegrationResponses:
+        - StatusCode: "200"
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: "200"
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: true
+          method.response.header.Access-Control-Allow-Methods: true
+          method.response.header.Access-Control-Allow-Origin: true
+        ResponseModels:
+            application/json: Empty    
+
+  ApiMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn: ApiResource
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref ApiResource
+      RestApiId:  !Ref ApiGateway
+      Integration:
+        Type: AWS_PROXY 
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TermAssignmentLambda.Arn}/invocations'
+        Credentials: !GetAtt LambdaExecutionRole.Arn
+        PassthroughBehavior: NEVER  # Ensure only request body is passed
+        ContentHandling: CONVERT_TO_TEXT  # Ensure request body is converted to text
+        RequestTemplates:
+          application/json: $input.json('$')
+      MethodResponses:
+      - StatusCode: "200"  
+                       
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApiMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    DependsOn: ApiDeployment
+    Properties:
+      StageName: default
+      RestApiId: !Ref ApiGateway
+      DeploymentId: !Ref ApiDeployment     
+      
