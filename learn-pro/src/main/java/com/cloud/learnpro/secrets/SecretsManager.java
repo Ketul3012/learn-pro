@@ -13,7 +13,7 @@ public class SecretsManager {
         AWSSecretsManager client = AWSSecretsManagerClient.builder().build();
 
         GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest();
-        getSecretValueRequest.setSecretId("term-assignment");
+        getSecretValueRequest.setSecretId("term-assignment-1");
         GetSecretValueResult getSecretValueResult = client.getSecretValue(getSecretValueRequest);
 
         ObjectMapper mapper = new ObjectMapper();

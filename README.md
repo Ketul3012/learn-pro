@@ -15,7 +15,6 @@
 2. AWS Lambda - deploy backend api
     1. Create a lambda with Java 21 environment and upload jar, change timeout to 1 minute or more
 
-
 ## Storage
 
 1. Dynamo DB - for storing user data
