@@ -38,4 +38,14 @@
 
 
 
+Commands
+
+aws cloudformation create-stack --stack-name termAssignment --template-body=file://cloudformation.yaml --capabilities=CAPABILITY_NAMED_IAM
+
+aws cloudformation describe-stacks --stack-name termAssignment
+
+aws cloudformation delete-stack --stack-name termAssignment
+
+
+
 
