@@ -24,7 +24,7 @@ public class StreamLambdaHandler implements RequestHandler<Map<String, Object>, 
 
             Map<String, Object> response = new HashMap<>();
             response.put("statusCode", 200);
-            response.put("headers", Map.of("Content-Type", "application/json"));
+            response.put("headers", Map.of("Content-Type", "application/json", "Access-Control-Allow-Origin", "*"));
             response.put("body", objectMapper.writeValueAsString(apiResponse));
             return response;
         } catch (JsonProcessingException e) {
