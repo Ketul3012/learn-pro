@@ -33,7 +33,7 @@ Resources:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: term-assignment-1
-      SecretString: '{"chatGptApiKey": "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" , "tableName" : "cloud-term-assignment", "emailFrom" : "ketulpatel3012@gmail.com", "servicesRegion" : "us-east-1"}'
+      SecretString: '{"chatGptApiKey": "********" , "tableName" : "cloud-term-assignment", "emailFrom" : "ketulpatel3012@gmail.com", "servicesRegion" : "us-east-1"}'
 
   TermAssignmentSESSenderEmailIdentity:
     Type: AWS::SES::EmailIdentity
