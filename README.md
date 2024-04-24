@@ -1,4 +1,6 @@
-### Chosen services
+### This project allows users to use LLM model to create a learning path for themselves. Project contians both frontend and backend code which can be deployed to AWS services. Project contains cloudformation file which could be executed to create a stack and complete the deployment.
+
+### AWS Infrastructure
 
 ## Compute
 
@@ -38,14 +40,17 @@
 
 
 
-Commands
+### Commands to create and delete stack
 
-aws cloudformation create-stack --stack-name termAssignment --template-body=file://cloudformation.yaml --capabilities=CAPABILITY_NAMED_IAM
+Following command will create a stack named learn-pro
+```
+aws cloudformation create-stack --stack-name learn-pro --template-body=file://cloudformation.yaml --capabilities=CAPABILITY_NAMED_IAM
+```
 
-aws cloudformation describe-stacks --stack-name termAssignment
-
-aws cloudformation delete-stack --stack-name termAssignment
-
+Following command will delete a stack named learn-pro
+```
+aws cloudformation delete-stack --stack-name learn-pro
+```
 
 
 
